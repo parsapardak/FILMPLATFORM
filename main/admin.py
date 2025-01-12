@@ -43,7 +43,31 @@ class WatchlistAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'movie__title')
 
 
+from django.contrib import admin
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
+from .models import Subscription
+
+# تنظیم Subscription در پنل ادمین
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ('user', 'type', 'start_date', 'end_date', 'is_active')
     list_filter = ('type', 'is_active')
+    search_fields = ('user__username',)
+
+# افزودن قابلیت نمایش اشتراک در صفحه کاربر
+class CustomUserAdmin(UserAdmin):
+    list_display = ('username', 'email', 'is_staff', 'is_superuser')
+    list_filter = ('is_staff', 'is_superuser', 'is_active')
+    search_fields = ('username', 'email')
+    readonly_fields = ('date_joined', 'last_login')
+
+    def subscription_type(self, obj):
+        try:
+            return obj.subscription.type
+        except Subscription.DoesNotExist:
+            return "No Subscription"
+    subscription_type.short_description = 'Subscription Type'
+
+admin.site.unregister(User)
+admin.site.register(User, CustomUserAdmin)

@@ -20,4 +20,7 @@ urlpatterns = [
     path('search/', views.search, name='search'),
     path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('user-list/', views.user_list, name='user_list'),
+    path('change-subscription/<int:user_id>/<str:new_type>/', views.change_subscription, name='change_subscription'),
+
 ]

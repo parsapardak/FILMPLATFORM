@@ -66,8 +66,9 @@ def add_director(request):
 
 
 def home(request):
-    return render(request, 'main/home.html')  # رندر صفحه اصلی
-
+    # فیلم‌های پیشنهادی: جدیدترین ۶ فیلم
+    recommended_movies = MoviesSeries.objects.order_by('-release_date')[:6]
+    return render(request, 'main/home.html', {'movies': recommended_movies})
 
 
 
@@ -119,17 +120,13 @@ from .models import MoviesSeries
 @login_required
 def movie_detail(request, movie_id):
     movie = get_object_or_404(MoviesSeries, id=movie_id)
-    
-    # بررسی اشتراک کاربر
     user_subscription = getattr(request.user, 'subscription', None)
-    can_download = False
-    if user_subscription:
-        can_download = user_subscription.type == 'Premium'
-    
+    can_download = user_subscription and user_subscription.type == 'Premium'
     return render(request, 'main/movie_detail.html', {
         'movie': movie,
         'can_download': can_download
     })
+
 
 
 
@@ -284,3 +281,36 @@ from django.shortcuts import render
 @login_required
 def user_profile(request):
     return render(request, 'main/user_profile.html', {'user': request.user})
+
+
+from django.contrib.auth.models import User
+from .models import Subscription
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib.auth.decorators import user_passes_test
+
+@user_passes_test(lambda u: u.is_superuser)  # فقط برای سوپریوزر
+def change_subscription(request, user_id, new_type):
+    user = get_object_or_404(User, id=user_id)
+    subscription, created = Subscription.objects.get_or_create(user=user)
+    subscription.type = new_type
+    subscription.save()
+    return redirect('user_list')  # بازگشت به لیست کاربران
+
+
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import render
+
+@user_passes_test(lambda u: u.is_superuser)
+def user_list(request):
+    users = User.objects.all()
+    user_data = []
+    for user in users:
+        subscription_type = user.subscription.type if hasattr(user, 'subscription') else "Free"
+        user_data.append({
+            'username': user.username,
+            'email': user.email,
+            'subscription': subscription_type,
+            'id': user.id,
+        })
+    return render(request, 'main/user_list.html', {'users': user_data})
