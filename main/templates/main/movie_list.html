@@ -1,0 +1,29 @@
+<div class="container mt-3">
+    <h1>Movies</h1>
+    <form method="get" class="mb-3">
+        <label for="sort_by">Sort By:</label>
+        <select name="sort_by" id="sort_by" class="form-select w-auto d-inline">
+            <option value="title" {% if sort_by == "title" %}selected{% endif %}>Title</option>
+            <option value="rating" {% if sort_by == "rating" %}selected{% endif %}>Rating</option>
+            <option value="release_date" {% if sort_by == "release_date" %}selected{% endif %}>Release Date</option>
+            <option value="popularity" {% if sort_by == "popularity" %}selected{% endif %}>Popularity</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Apply</button>
+    </form>
+
+
+    <div class="row">
+        {% for movie in movies %}
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <img src="{{ movie.poster.url }}" alt="{{ movie.title }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ movie.title }}</h5>
+                    <p class="card-text">Rating: {{ movie.average_rating|default:"N/A" }}</p>
+                    <a href="/movie/{{ movie.id }}/" class="btn btn-primary">Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>

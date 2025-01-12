@@ -1,0 +1,27 @@
+<div class="container mt-3">
+    <h1>Actors</h1>
+    <form method="get" class="mb-3">
+        <label for="sort_by">Sort By:</label>
+        <select name="sort_by" id="sort_by" class="form-select w-auto d-inline">
+            <option value="name" {% if sort_by == "name" %}selected{% endif %}>Name</option>
+            <option value="movies_count" {% if sort_by == "movies_count" %}selected{% endif %}>Movies Count</option>
+            <option value="popularity" {% if sort_by == "popularity" %}selected{% endif %}>Popularity</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Apply</button>
+    </form>
+
+    <div class="row">
+        {% for actor in actors %}
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <img src="{{ actor.photo.url }}" class="card-img-top" alt="{{ actor.name }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ actor.name }}</h5>
+                    <p class="card-text">Movies: {{ actor.movies_count|default:"N/A" }}</p>
+                    <a href="/actor/{{ actor.id }}/" class="btn btn-primary">Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
