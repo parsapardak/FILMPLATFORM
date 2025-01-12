@@ -113,19 +113,24 @@ def movie_list(request):
 
 #  ویو هر فیلم بعد از تغییر برای کاربرای پریمیوم
 from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from .models import MoviesSeries
 
+@login_required
 def movie_detail(request, movie_id):
     movie = get_object_or_404(MoviesSeries, id=movie_id)
-
-    # بررسی وضعیت اشتراک کاربر
-    user_subscription = request.user.subscription if request.user.is_authenticated else None
-    can_download = user_subscription and user_subscription.type == 'Premium'
-
+    
+    # بررسی اشتراک کاربر
+    user_subscription = getattr(request.user, 'subscription', None)
+    can_download = False
+    if user_subscription:
+        can_download = user_subscription.type == 'Premium'
+    
     return render(request, 'main/movie_detail.html', {
         'movie': movie,
-        'can_download': can_download,
+        'can_download': can_download
     })
+
 
 
 
@@ -159,7 +164,7 @@ def actor_detail(request, actor_id):
 
 
 #واچ لیست
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Watchlist, MoviesSeries
 from django.contrib.auth.decorators import login_required
 
@@ -170,9 +175,15 @@ def watchlist(request):
 
 @login_required
 def add_to_watchlist(request, movie_id):
-    movie = MoviesSeries.objects.get(id=movie_id)
+    # بررسی وجود فیلم در پایگاه داده
+    movie = get_object_or_404(MoviesSeries, id=movie_id)
+    
+    # ایجاد واچ لیست در صورت عدم وجود
     watchlist, created = Watchlist.objects.get_or_create(user=request.user)
+    
+    # اضافه کردن فیلم به واچ لیست
     watchlist.movies.add(movie)
+    
     return redirect('watchlist')
 
 @login_required

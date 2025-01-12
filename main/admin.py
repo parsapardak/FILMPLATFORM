@@ -14,6 +14,7 @@ class MoviesSeriesAdmin(admin.ModelAdmin):
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
     list_display = ('name',)
+    exclude = ('movies',)
 
 
 @admin.register(Actor)
@@ -21,12 +22,13 @@ class ActorAdmin(admin.ModelAdmin):
     list_display = ('name', 'photo', 'birth_date', 'nationality')
     search_fields = ('name', 'nationality')  # جستجو
     list_filter = ('birth_date', 'nationality')  # فیلتر
+    exclude = ('moviesseries',)
 
 
 @admin.register(Director)
 class DirectorAdmin(admin.ModelAdmin):
     list_display = ('name',)
-
+    exclude = ('moviesseries',)
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
