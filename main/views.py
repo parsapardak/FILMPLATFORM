@@ -51,6 +51,7 @@ def add_actor(request):
 
 
 
+
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def add_director(request):
@@ -314,3 +315,42 @@ def user_list(request):
             'id': user.id,
         })
     return render(request, 'main/user_list.html', {'users': user_data})
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import user_passes_test
+from .models import Subscription
+
+# لیست کاربران برای مدیریت توسط سوپریوزر
+@user_passes_test(lambda u: u.is_superuser)
+def manage_users(request):
+    users = User.objects.all()
+    user_data = []
+
+    for user in users:
+        # بررسی وجود اشتراک برای کاربر
+        subscription = Subscription.objects.filter(user=user).first()
+        subscription_type = subscription.type if subscription else "Free"
+        status = "Active" if user.is_active else "Inactive"
+
+        user_data.append({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'subscription': subscription_type,
+            'status': status,
+        })
+
+    return render(request, 'main/manage_users.html', {'users': user_data})
+
+# تغییر اشتراک کاربر
+@user_passes_test(lambda u: u.is_superuser)
+def change_subscription(request, user_id, new_type):
+    user = get_object_or_404(User, id=user_id)
+
+    # ایجاد اشتراک در صورت عدم وجود
+    subscription, created = Subscription.objects.get_or_create(user=user)
+    subscription.type = new_type
+    subscription.save()
+
+    return redirect('manage_users')

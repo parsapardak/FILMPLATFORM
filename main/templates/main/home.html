@@ -53,63 +53,64 @@
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">🎥 Movie Platform</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">🎥 Movie Platform</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/movies/">Movies</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/actors/">Actors</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/reports/">Reports</a>
+                </li>
+                {% if user.is_superuser %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        AdminBar
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                        <li><a class="dropdown-item" href="/admin/main/moviesseries/">Manage Movies</a></li>
+                        <li><a class="dropdown-item" href="/admin/main/genre/">Manage Genres</a></li>
+                        <li><a class="dropdown-item" href="/admin/main/actor/">Manage Actors</a></li>
+                        <li><a class="dropdown-item" href="/admin/main/director/">Manage Directors</a></li>
+                        <li><a class="dropdown-item" href="/admin/">Django Admin Panel</a></li>
+                        <li><a class="dropdown-item" href="{% url 'manage_users' %}">Manage Users</a></li>
+                    </ul>
+                </li>
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Home</a>
+                        <a class="nav-link" href="/profile/">Profile</a>
+                    </li>
+                    <form method="post" action="{% url 'logout' %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">Logout</button>
+                    </form>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/accounts/login/">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/movies/">Movies</a>
+                        <a class="nav-link" href="/signup/">Sign Up</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/actors/">Actors</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/reports/">Reports</a>
-                    </li>
-                    {% if user.is_superuser %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            AdminBar
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                            <li><a class="dropdown-item" href="/admin/main/moviesseries/">Manage Movies</a></li>
-                            <li><a class="dropdown-item" href="/admin/main/genre/">Manage Genres</a></li>
-                            <li><a class="dropdown-item" href="/admin/main/actor/">Manage Actors</a></li>
-                            <li><a class="dropdown-item" href="/admin/main/director/">Manage Directors</a></li>
-                            <li><a class="dropdown-item" href="/admin/">Django Admin Panel</a></li>
-                        </ul>
-                    </li>
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="/profile/">Profile</a>
-                        </li>
-                        <form method="post" action="{% url 'logout' %}" class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-sm">Logout</button>
-                        </form>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="/accounts/login/">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/signup/">Sign Up</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
+                {% endif %}
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <!-- Hero Section -->
     <section class="hero-section">
