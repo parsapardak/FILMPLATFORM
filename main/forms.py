@@ -26,3 +26,12 @@ class DirectorForm(forms.ModelForm):
     class Meta:
         model = Director
         fields = ['name']
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'comment']  # فیلدهای قابل ویرایش
+        widgets = {
+            'rating': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 5}),
+            'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }

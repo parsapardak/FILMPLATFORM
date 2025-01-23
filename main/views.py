@@ -89,19 +89,33 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 
 
 
-#ویو لیست فیلم
-from .models import MoviesSeries
+from django.db.models import Q, Count
+
 def movie_list(request):
-    sort_by = request.GET.get('sort_by', 'title')
-    if sort_by == 'likes':
-        movies = MoviesSeries.objects.annotate(like_count=Count('likes')).order_by('-like_count')
-    elif sort_by == 'rating':
-        movies = MoviesSeries.objects.annotate(average_rating=Avg('reviews__rating')).order_by('-average_rating')
+    query = request.GET.get('q', '')  # دریافت متن جستجو
+    sort_by = request.GET.get('sort_by', 'popularity')  # مرتب‌سازی پیش‌فرض بر اساس محبوبیت
+    movies = MoviesSeries.objects.all()
+
+    # فیلتر جستجو
+    if query:
+        movies = movies.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(genres__name__icontains=query) |
+            Q(actors__name__icontains=query)
+        ).distinct()
+
+    # مرتب‌سازی
+    if sort_by == 'popularity':
+        movies = movies.order_by('-popularity')
+    elif sort_by == 'likes':
+        movies = movies.annotate(total_likes=Count('likes')).order_by('-total_likes')
     elif sort_by == 'release_date':
-        movies = MoviesSeries.objects.order_by('-release_date')
-    else:
-        movies = MoviesSeries.objects.order_by('title')
-    return render(request, 'main/movie_list.html', {'movies': movies, 'sort_by': sort_by})
+        movies = movies.order_by('-release_date')
+
+    return render(request, 'main/movie_list.html', {'movies': movies, 'sort_by': sort_by, 'query': query})
+
+
 
 
 from django.db.models import Avg
@@ -141,10 +155,17 @@ def movie_detail(request, movie_id):
 
 
 #ویو لیست بازیگران
-from .models import Actor
+from django.db.models import Q
+
 def actor_list(request):
+    query = request.GET.get('q', '')  # دریافت مقدار جست‌وجو
     actors = Actor.objects.all()
-    return render(request, 'main/actor_list.html', {'actors': actors})
+
+    # اعمال فیلتر جست‌وجو
+    if query:
+        actors = actors.filter(Q(name__icontains=query))
+
+    return render(request, 'main/actor_list.html', {'actors': actors, 'query': query})
 
 
 
@@ -168,8 +189,6 @@ def actor_detail(request, actor_id):
     return render(request, 'main/actor_detail.html', {'actor': actor})
 
 
-
-#واچ لیست
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Watchlist, MoviesSeries
 from django.contrib.auth.decorators import login_required
@@ -181,22 +200,16 @@ def watchlist(request):
 
 @login_required
 def add_to_watchlist(request, movie_id):
-    # بررسی وجود فیلم در پایگاه داده
     movie = get_object_or_404(MoviesSeries, id=movie_id)
-    
-    # ایجاد واچ لیست در صورت عدم وجود
     watchlist, created = Watchlist.objects.get_or_create(user=request.user)
-    
-    # اضافه کردن فیلم به واچ لیست
-    watchlist.movies.add(movie)
-    
+    watchlist.movies.add(movie)  # اضافه کردن فیلم به واچ لیست
     return redirect('watchlist')
 
 @login_required
 def remove_from_watchlist(request, movie_id):
-    movie = MoviesSeries.objects.get(id=movie_id)
-    watchlist = Watchlist.objects.get(user=request.user)
-    watchlist.movies.remove(movie)
+    movie = get_object_or_404(MoviesSeries, id=movie_id)
+    watchlist = get_object_or_404(Watchlist, user=request.user)
+    watchlist.movies.remove(movie)  # حذف فیلم از واچ لیست
     return redirect('watchlist')
 
 
@@ -371,22 +384,39 @@ def change_subscription(request, user_id, new_type):
 
 
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import MoviesSeries, Review
+from .forms import ReviewForm
+
 @login_required
-def add_comment(request, movie_id):
+def add_review(request, movie_id):
     movie = get_object_or_404(MoviesSeries, id=movie_id)
     if request.method == 'POST':
-        comment = request.POST.get('comment')
-        rating = request.POST.get('rating')
-        if comment:
-            Review.objects.create(user=request.user, movie=movie, comment=comment, rating=rating)
-    return redirect('movie_detail', movie_id=movie_id)
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.movie = movie
+            review.user = request.user
+            review.save()
+            return redirect('movie_detail', movie_id=movie.id)
+    else:
+        form = ReviewForm()
+    return render(request, 'main/add_review.html', {'form': form, 'movie': movie})
 
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from .models import MoviesSeries
 
 @login_required
-def like_movie(request, movie_id):
+def add_like(request, movie_id):
     movie = get_object_or_404(MoviesSeries, id=movie_id)
-    if request.user in movie.likes.all():
-        movie.likes.remove(request.user)
-    else:
-        movie.likes.add(request.user)
-    return redirect('movie_detail', movie_id=movie_id)
+    movie.likes.add(request.user)
+    return redirect('movie_detail', movie_id=movie.id)
+
+@login_required
+def remove_like(request, movie_id):
+    movie = get_object_or_404(MoviesSeries, id=movie_id)
+    movie.likes.remove(request.user)
+    return redirect('movie_detail', movie_id=movie.id)

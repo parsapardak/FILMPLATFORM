@@ -53,11 +53,19 @@ class ReviewAdmin(admin.ModelAdmin):
 
 
 # تنظیمات Watchlist
+from django.contrib import admin
+from .models import Watchlist, MoviesSeries
+
 @admin.register(Watchlist)
 class WatchlistAdmin(admin.ModelAdmin):
-    list_display = ('user', 'movie', 'added_date')
-    list_filter = ('added_date',)
-    search_fields = ('user__username', 'movie__title')
+    list_display = ('user', 'display_movies', 'created_at')  # اضافه کردن ستون‌های مورد نیاز
+    search_fields = ('user__username', 'movies__title')  # جستجو بر اساس نام کاربر و عنوان فیلم
+    filter_horizontal = ('movies',)  # فعال‌سازی رابط کاربری برای فیلتر کردن فیلم‌ها در واچ لیست
+
+    def display_movies(self, obj):
+        """نمایش لیست فیلم‌ها به صورت خلاصه"""
+        return ", ".join([movie.title for movie in obj.movies.all()])
+    display_movies.short_description = 'Movies in Watchlist'
 
 
 # تنظیم Subscription در پنل مدیریت

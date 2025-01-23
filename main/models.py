@@ -17,8 +17,8 @@ class MoviesSeries(models.Model):
     is_series = models.BooleanField(default=False)  # آیا سریال است یا خیر
     poster = models.ImageField(upload_to='posters/', blank=True, null=True)
     download_link = models.URLField(max_length=500, blank=True, null=True)  # لینک دانلود فیلم
-    likes = models.IntegerField(default=0)  
- 
+    likes = models.ManyToManyField(User, related_name='liked_movies', blank=True)  # تعریف فیلد لایک
+
     def __str__(self):
         return self.title
 
@@ -70,19 +70,16 @@ class Review(models.Model):
 
 
 
+from django.db import models
 from django.contrib.auth.models import User
 
 class Watchlist(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # ارتباط با کاربر
-    movie = models.ForeignKey('MoviesSeries', on_delete=models.CASCADE)  # ارتباط با فیلم
-    added_date = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('user', 'movie')  # جلوگیری از تکرار یک فیلم در واچ لیست کاربر
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='watchlist')  # هر کاربر یک واچ لیست دارد
+    movies = models.ManyToManyField('MoviesSeries', related_name='in_watchlists')  # ارتباط چند به چند با فیلم‌ها
+    created_at = models.DateTimeField(auto_now_add=True)  # زمان ایجاد واچ لیست
 
     def __str__(self):
-        return f"{self.user.username} - {self.movie.title}"
-
+        return f"{self.user.username}'s Watchlist"
 
 
     
