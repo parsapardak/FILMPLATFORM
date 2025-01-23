@@ -17,7 +17,8 @@ class MoviesSeries(models.Model):
     is_series = models.BooleanField(default=False)  # آیا سریال است یا خیر
     poster = models.ImageField(upload_to='posters/', blank=True, null=True)
     download_link = models.URLField(max_length=500, blank=True, null=True)  # لینک دانلود فیلم
-   
+    likes = models.IntegerField(default=0)  
+ 
     def __str__(self):
         return self.title
 

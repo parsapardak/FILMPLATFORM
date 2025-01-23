@@ -92,8 +92,16 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 #ویو لیست فیلم
 from .models import MoviesSeries
 def movie_list(request):
-    movies = MoviesSeries.objects.all()
-    return render(request, 'main/movie_list.html', {'movies': movies})
+    sort_by = request.GET.get('sort_by', 'title')
+    if sort_by == 'likes':
+        movies = MoviesSeries.objects.annotate(like_count=Count('likes')).order_by('-like_count')
+    elif sort_by == 'rating':
+        movies = MoviesSeries.objects.annotate(average_rating=Avg('reviews__rating')).order_by('-average_rating')
+    elif sort_by == 'release_date':
+        movies = MoviesSeries.objects.order_by('-release_date')
+    else:
+        movies = MoviesSeries.objects.order_by('title')
+    return render(request, 'main/movie_list.html', {'movies': movies, 'sort_by': sort_by})
 
 
 from django.db.models import Avg
@@ -354,3 +362,31 @@ def change_subscription(request, user_id, new_type):
     subscription.save()
 
     return redirect('manage_users')
+
+
+
+
+
+
+
+
+
+@login_required
+def add_comment(request, movie_id):
+    movie = get_object_or_404(MoviesSeries, id=movie_id)
+    if request.method == 'POST':
+        comment = request.POST.get('comment')
+        rating = request.POST.get('rating')
+        if comment:
+            Review.objects.create(user=request.user, movie=movie, comment=comment, rating=rating)
+    return redirect('movie_detail', movie_id=movie_id)
+
+
+@login_required
+def like_movie(request, movie_id):
+    movie = get_object_or_404(MoviesSeries, id=movie_id)
+    if request.user in movie.likes.all():
+        movie.likes.remove(request.user)
+    else:
+        movie.likes.add(request.user)
+    return redirect('movie_detail', movie_id=movie_id)

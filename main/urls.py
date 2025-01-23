@@ -24,4 +24,7 @@ urlpatterns = [
     path('user-list/', views.user_list, name='user_list'),  # لیست کاربران
     path('change-subscription/<int:user_id>/<str:new_type>/', views.change_subscription, name='change_subscription'),  # تغییر نوع اشتراک
     path('manage-users/', views.manage_users, name='manage_users'),  # مدیریت کاربران
+    path('movie/<int:movie_id>/like/', views.like_movie, name='like_movie'),
+    path('movie/<int:movie_id>/add-comment/', views.add_comment, name='add_comment'),
+
 ]
