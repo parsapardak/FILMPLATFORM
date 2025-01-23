@@ -67,6 +67,12 @@
         .btn-guest:hover {
             background-color: #009874;
         }
+        .password-guidelines {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: -10px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -81,6 +87,9 @@
             <div class="mb-3">
                 <label for="password1" class="form-label">Password</label>
                 {{ form.password1 }}
+                <small class="password-guidelines">
+                        Tips:Must be at least 8 characters long and include both numbers and letters.
+                </small>
             </div>
             <div class="mb-3">
                 <label for="password2" class="form-label">Confirm Password</label>
