@@ -1,11 +1,13 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .forms import MovieForm,GenreForm, ActorForm, DirectorForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
-
-
-
+from django.db.models import Q, Count, Avg
+from .models import MoviesSeries, Actor, Watchlist, Review
+from .forms import ReviewForm
+from django.contrib.auth.models import User
+from .models import Subscription
 
 @login_required
 @user_passes_test(lambda u: u.is_staff)  # فقط برای ادمین‌ها
@@ -66,11 +68,12 @@ def add_director(request):
 
 
 
+
+
 def home(request):
     # فیلم‌های پیشنهادی: جدیدترین ۶ فیلم
     recommended_movies = MoviesSeries.objects.order_by('-release_date')[:6]
     return render(request, 'main/home.html', {'movies': recommended_movies})
-
 
 
 def signup(request):
@@ -84,15 +87,11 @@ def signup(request):
         form = UserCreationForm()
     return render(request, 'main/signup.html', {'form': form})
 
-from django.contrib.auth.decorators import login_required, user_passes_test
 
 
-
-
-from django.db.models import Q, Count
 
 def movie_list(request):
-    query = request.GET.get('q', '')  # دریافت متن جستجو
+    query = request.GET.get('q', '')  # متن جستجو
     sort_by = request.GET.get('sort_by', 'popularity')  # مرتب‌سازی پیش‌فرض بر اساس محبوبیت
     movies = MoviesSeries.objects.all()
 
@@ -110,6 +109,8 @@ def movie_list(request):
         movies = movies.order_by('-popularity')
     elif sort_by == 'likes':
         movies = movies.annotate(total_likes=Count('likes')).order_by('-total_likes')
+    elif sort_by == 'rating':
+        movies = movies.annotate(average_rating=Avg('review__rating')).order_by('-average_rating')
     elif sort_by == 'release_date':
         movies = movies.order_by('-release_date')
 
@@ -117,28 +118,8 @@ def movie_list(request):
 
 
 
-
-from django.db.models import Avg
-from .models import MoviesSeries
-def movie_list(request):
-    sort_by = request.GET.get('sort_by', 'title')  # دریافت فیلتر از پارامتر URL
-    if sort_by == 'rating':
-        movies = MoviesSeries.objects.annotate(average_rating=Avg('review__rating')).order_by('-average_rating')
-    elif sort_by == 'release_date':
-        movies = MoviesSeries.objects.order_by('-release_date')
-    elif sort_by == 'popularity':
-        movies = MoviesSeries.objects.order_by('-popularity')
-    else:
-        movies = MoviesSeries.objects.order_by('title')  # مرتب‌سازی پیش‌فرض
-    return render(request, 'main/movie_list.html', {'movies': movies, 'sort_by': sort_by})
-
-
-
-
 #  ویو هر فیلم بعد از تغییر برای کاربرای پریمیوم
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import MoviesSeries
+
 
 @login_required
 def movie_detail(request, movie_id):
@@ -169,8 +150,7 @@ def actor_list(request):
 
 
 
-from django.db.models import Count, Avg
-from .models import Actor
+
 def actor_list(request):
     sort_by = request.GET.get('sort_by', 'name')  # دریافت فیلتر از پارامتر URL
     if sort_by == 'movies_count':
@@ -189,9 +169,7 @@ def actor_detail(request, actor_id):
     return render(request, 'main/actor_detail.html', {'actor': actor})
 
 
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import Watchlist, MoviesSeries
-from django.contrib.auth.decorators import login_required
+
 
 @login_required
 def watchlist(request):
@@ -228,6 +206,7 @@ def user_profile(request):
         'user': request.user,
         'subscription': subscription,
     })
+
 
 
 
@@ -337,10 +316,7 @@ def user_list(request):
         })
     return render(request, 'main/user_list.html', {'users': user_data})
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.models import User
-from django.contrib.auth.decorators import user_passes_test
-from .models import Subscription
+
 
 # لیست کاربران برای مدیریت توسط سوپریوزر
 @user_passes_test(lambda u: u.is_superuser)
@@ -364,6 +340,8 @@ def manage_users(request):
 
     return render(request, 'main/manage_users.html', {'users': user_data})
 
+
+
 # تغییر اشتراک کاربر
 @user_passes_test(lambda u: u.is_superuser)
 def change_subscription(request, user_id, new_type):
@@ -381,14 +359,6 @@ def change_subscription(request, user_id, new_type):
 
 
 
-
-
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import MoviesSeries, Review
-from .forms import ReviewForm
-
 @login_required
 def add_review(request, movie_id):
     movie = get_object_or_404(MoviesSeries, id=movie_id)
@@ -405,9 +375,7 @@ def add_review(request, movie_id):
     return render(request, 'main/add_review.html', {'form': form, 'movie': movie})
 
 
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from .models import MoviesSeries
+
 
 @login_required
 def add_like(request, movie_id):

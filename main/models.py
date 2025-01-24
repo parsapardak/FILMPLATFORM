@@ -1,7 +1,8 @@
 from django.db import models
-from django.contrib.auth.models import User  # برای User پیش‌فرض Django
-
-
+from django.contrib.auth.models import User  
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db import models
 
 
 class MoviesSeries(models.Model):
@@ -70,8 +71,7 @@ class Review(models.Model):
 
 
 
-from django.db import models
-from django.contrib.auth.models import User
+
 
 class Watchlist(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='watchlist')  # هر کاربر یک واچ لیست دارد
@@ -83,16 +83,14 @@ class Watchlist(models.Model):
 
 
     
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.contrib.auth.models import User
+
 
 class Subscription(models.Model):
     TYPE_CHOICES = [
         ('Free', 'Free'),
         ('Premium', 'Premium'),
     ]
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='subscription')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True, related_name='subscription')
     type = models.CharField(max_length=50, choices=TYPE_CHOICES, default='Free')
     start_date = models.DateField(auto_now_add=True)
     end_date = models.DateField(null=True, blank=True)

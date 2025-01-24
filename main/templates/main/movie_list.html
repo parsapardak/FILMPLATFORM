@@ -133,7 +133,6 @@
                 <div class="col-md-4">
                     <select name="sort_by" class="form-select">
                         <option value="popularity" {% if request.GET.sort_by == 'popularity' %}selected{% endif %}>Most Popular</option>
-                        <option value="likes" {% if request.GET.sort_by == 'likes' %}selected{% endif %}>Most Liked</option>
                         <option value="release_date" {% if request.GET.sort_by == 'release_date' %}selected{% endif %}>Latest</option>
                     </select>
                 </div>
